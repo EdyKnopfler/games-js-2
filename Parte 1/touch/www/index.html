@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+   <meta charset="utf-8">
+   <title>Arrastando Objeto Via Touch</title>
+   <meta name="viewport" content="width=device-width, height=device-height, user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1">
+   <script src="cordova.js"></script>
+   <script src="rAF.js"></script>
+   <script>
+      var canvas, context;
+      var x, y, raio = 42;
+      var arrastando;
+      var imgBruxa;
+      var xAnterior, yAnterior;
+      var angulo = 0;
+   
+      window.onload = function() {
+         imgBruxa = new Image();
+         imgBruxa.src = 'bruxa.png';
+         
+         // Esperar a imagem carregar
+         imgBruxa.onload = function() {
+            document.addEventListener('deviceready', iniciar);
+            //iniciar();
+         }
+      }
+      
+      function iniciar() {
+         canvas = document.getElementById('touch');
+         context = canvas.getContext('2d');
+         
+         x = canvas.width / 2;
+         y = canvas.height / 2;
+         
+         canvas.addEventListener('touchstart', touchStart);
+         canvas.addEventListener('touchmove', touchMove);
+         canvas.addEventListener('touchend', touchEnd);
+         
+         requestAnimationFrame(animar);
+      }
+      
+      function animar() {
+         context.clearRect(0, 0, canvas.width, canvas.height);
+         desenharBruxa();
+         requestAnimationFrame(animar);
+      }
+      
+      function desenharBruxa() {
+         var largOrigem = 96, largDestino = 64;
+         var xOrigem = (x >= xAnterior)
+                        ?  0            // Direita
+                        :  largOrigem;  // Esquerda
+         
+         context.drawImage(imgBruxa, 
+                           xOrigem,  // x na spritesheet
+                           0,        // y na spritesheet
+                           largOrigem, 
+                           largOrigem,
+                           x - largDestino/2,  // x no Canvas
+                           y - largDestino/2,  // y no Canvas
+                           largDestino,
+                           largDestino);
+      }
+      
+      function touchStart(e) {
+         var posicao = converterParaCanvas(
+                          e.changedTouches[0].pageX - canvas.offsetLeft,
+                          e.changedTouches[0].pageY - canvas.offsetTop
+                       );
+         var xToque = posicao.x;
+         var yToque = posicao.y;
+      
+         var distanciaX = Math.abs(x - xToque);
+         var distanciaY = Math.abs(y - yToque);
+
+         // Pitágoras
+         if (distanciaX*distanciaX + distanciaY*distanciaY <= raio*raio) {
+            arrastando = true;      
+            x = xToque;
+            y = yToque;
+            xAnterior = x;  // Guardar a posição
+            yAnterior = y;
+         }
+         
+         if( navigator.userAgent.match(/Android/i) )
+            e.preventDefault();
+      }
+      
+      function touchMove(e) {
+         if (arrastando) {
+            xAnterior = x;  // Guardar a posição
+            yAnterior = y;
+            
+            var posicao = converterParaCanvas(
+                             e.changedTouches[0].pageX - canvas.offsetLeft,
+                             e.changedTouches[0].pageY - canvas.offsetTop
+                          );
+            x = posicao.x;
+            y = posicao.y;
+         }
+      }
+      
+      function touchEnd(e) {
+         arrastando = false;
+      }
+      
+      function converterParaCanvas(xToque, yToque) {
+         return {
+            x: canvas.width * xToque / canvas.offsetWidth,
+            y: canvas.height * yToque / canvas.offsetHeight
+         }
+      }
+   </script>
+   <style>
+      body {
+         margin: 0;
+         width: 100%;
+         height: 100%;
+         background: #333;
+      }
+   
+      /* Padrão (largura < altura) */
+      canvas {
+         width: 100%;
+         height: auto;
+         display: block;
+         background: #003;
+      }
+      
+      /* A partir de 1/1 (iguais ou largura > altura) */
+      @media (min-aspect-ratio: 1/1) {
+         canvas {
+            height: 100%;
+            width: auto;
+            margin: 0 auto;
+         }
+      }
+   </style>
+</head>
+
+<body>
+   <canvas id="touch" width="320" height="240"></canvas>
+</body>
+
+</head>

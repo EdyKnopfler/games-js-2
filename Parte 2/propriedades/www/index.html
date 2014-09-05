@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+   <meta charset="utf-8">
+   <meta name="viewport" content="width=device-width, 
+         height=device-height, user-scalable=no, 
+         initial-scale=1, maximum-scale=1, minimum-scale=1">
+   <title>Formas</title>
+   
+   <script src="cordova.js"></script>
+   <script src="rAF.js"></script>
+   <script src="Box2dWeb-2.1.a.3.min.js"></script>
+   <script>
+      var b2Vec2 = Box2D.Common.Math.b2Vec2;
+      var b2World = Box2D.Dynamics.b2World;
+      var b2BodyDef = Box2D.Dynamics.b2BodyDef;
+      var b2FixtureDef = Box2D.Dynamics.b2FixtureDef;
+      var b2CircleShape = Box2D.Collision.Shapes.b2CircleShape;
+      var b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape;
+      var b2DebugDraw = Box2D.Dynamics.b2DebugDraw;
+      var b2Body = Box2D.Dynamics.b2Body;
+
+      var canvas, context, mundo;
+      var escala = 30;  // pixels por metro
+      
+      window.onload = function() {
+         canvas = document.getElementById('formas');
+         context = canvas.getContext('2d');
+         mundo = new b2World(new b2Vec2(0, 9.81), true);
+         debugDraw();
+         iniciar();
+         //document.addEventListener('deviceready', iniciar);
+      }
+      
+      function debugDraw() {
+         var debugDraw = new b2DebugDraw();
+         debugDraw.SetSprite(context);
+         debugDraw.SetDrawScale(escala);
+         debugDraw.SetFillAlpha(0.6);
+         debugDraw.SetLineThickness(1.0);
+         debugDraw.SetFlags(b2DebugDraw.e_shapeBit);  // Formas!!
+         mundo.SetDebugDraw(debugDraw);
+      }
+      
+      function animar() {
+         var agora = Date.now();
+         var decorrido = agora - ultimoCiclo;
+         
+         mundo.Step(decorrido/1000, 8, 3);
+         mundo.DrawDebugData();
+         
+         ultimoCiclo = agora;
+         //requestAnimationFrame(animar);
+         setTimeout(animar, 1000/60);
+      }
+      
+      function parede(x, y, largura, altura) {
+         // Ajustar para escala
+         x /= escala;
+         y /= escala;
+         largura /= escala;
+         altura /= escala;
+         
+         // Meia caixa
+         var meiaLargura = largura / 2;
+         var meiaAltura = altura / 2;
+         
+         var corpoDef = new b2BodyDef();
+         corpoDef.position.Set(x + meiaLargura, y + meiaAltura);
+         
+         // Formato retangular
+         var forma = new b2PolygonShape();
+         forma.SetAsBox(meiaLargura, meiaAltura);
+         
+         var fixtureDef = new b2FixtureDef();
+         fixtureDef.shape = forma;
+         fixtureDef.friction = 0.5;
+         fixtureDef.restitution = 0.5;
+         fixtureDef.density = 1;
+         
+         // Criar
+         var corpo = mundo.CreateBody(corpoDef);
+         corpo.CreateFixture(fixtureDef);
+      }
+      
+      function iniciar() {
+         parede(0, 460, 640, 20);  // Chão
+         parede(620, 0, 20, 460);  // Muro
+         var bloco = criarBloco();
+         
+         ultimoCiclo = Date.now();
+         //requestAnimationFrame(animar);
+         setTimeout(animar, 1000/60);
+         
+         var centro = bloco.GetWorldCenter();
+         bloco.ApplyImpulse(new b2Vec2(75, 0), centro);
+      }
+      
+      function criarBloco() {
+         var corpoDef = new b2BodyDef();
+         corpoDef.type = b2Body.b2_dynamicBody;
+         corpoDef.position.Set(100/escala, 436/escala);
+         
+         var forma = new b2PolygonShape();
+         forma.SetAsBox(25/escala, 25/escala);
+         
+         var fixtureDef = new b2FixtureDef();
+         fixtureDef.shape = forma;
+         fixtureDef.friction = 0.5;     // Atrito
+         fixtureDef.restitution = 0.5;  // Elasticidade
+         fixtureDef.density = 1;        // Densidade
+         
+         var bloco = mundo.CreateBody(corpoDef);
+         bloco.CreateFixture(fixtureDef);
+         return bloco;
+      }
+      
+      
+      
+   </script>
+</head>
+
+<body>
+   <canvas id="formas" width="640" height="480"></canvas>
+</body>
+
+</html>

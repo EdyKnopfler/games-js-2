@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+   <meta charset="utf-8">
+   <title>Primeiro Projeto</title>
+   <meta name="viewport" content="width=device-width, height=device-height, user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1">
+   <script src="cordova.js"></script>
+   <script src="rAF.js"></script>
+   <script>
+      var canvas, context;
+      var x, y, raio = 10;
+      var vX = 10, vY = -20;  // Velocidades
+   
+      window.onload = function() {
+         //document.addEventListener('deviceready', iniciar);
+         iniciar();
+      }
+      
+      function iniciar() {
+         canvas = document.getElementById('primeiro');
+         context = canvas.getContext('2d');
+         
+         // Começar no meio da tela
+         x = canvas.width / 2;
+         y = canvas.height / 2;
+         
+         requestAnimationFrame(animar);
+      }
+      
+      function animar() {
+         // Não deixar passar das bordas
+         // Como x e y são o centro, descontamos o raio
+         // Se passou do limite, invertemos o sentido da velocidade
+         if (x < raio || x > canvas.width - raio)
+            vX *= -1;  
+            
+         if (y < raio || y > canvas.height - raio)
+            vY *= -1;
+            
+         x += vX;
+         y += vY;
+      
+         context.clearRect(0, 0, canvas.width, canvas.height);
+         
+         context.beginPath();
+         context.arc(x, y, raio, 0, Math.PI*2);
+         context.fill();
+         
+         requestAnimationFrame(animar);
+      }
+   </script>
+</head>
+
+<body>
+   <canvas id="primeiro" width="320" height="240"></canvas>
+</body>
+
+</head>

@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="br.com.casadocodigo.livrojogoshtml2.tacobilhar" 
+        version="0.0.1" 
+        xmlns="http://www.w3.org/ns/widgets" 
+        xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>Taco de bilhar</name>
+    <description>
+        Implementando um taco que rotaciona e regula força para telas touch usando Hammer.js
+    </description>
+    <author email="ederson_cassio@yahoo.com.br" href="http://gamecursos.com.br">
+        Éderson Cássio
+    </author>
+    <content src="index.html" />
+    <access origin="*" />
+    <preference name="Orientation" value="landscape" />
+    <icon src="www/img/icone.png" />
+</widget>

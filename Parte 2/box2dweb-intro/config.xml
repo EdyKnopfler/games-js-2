@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='utf-8'?>
+
+<widget id="br.com.casadocodigo.livrojogoshtml2.primeiro"
+        version="0.0.1" 
+        xmlns="http://www.w3.org/ns/widgets" 
+        xmlns:cdv="http://cordova.apache.org/ns/1.0">
+        
+    <name>Introdução ao Box2dWeb</name>
+    
+    <description>
+        Apresentando os conceitos de mundo físico, corpos, fixtures, gravidade
+    </description>
+    
+    <author email="ederson_cassio@yahoo.com.br" href="http://gamecursos.com.br">
+        Éderson Cássio
+    </author>
+    
+    <content src="index.html" />
+    <access origin="*" />
+</widget>
