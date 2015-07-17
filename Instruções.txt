@@ -1,0 +1,19 @@
+INSTRUÇÕES PARA RODAR OS EXEMPLOS
+
+Estando com o Cordova devidamente instalado (instruções no livro), execute os passos:
+
+1. Entre no diretório desejado:
+
+cd "Parte 2/jogo-bilhar"
+
+2. Adicione a plataforma Android
+
+cordova platform add android
+
+3. Faça o build:
+
+cordova build android
+
+4. Conecte o aparelho e rode:
+
+cordova run android
