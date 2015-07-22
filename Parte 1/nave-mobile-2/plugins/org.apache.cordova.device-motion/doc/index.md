@@ -24,6 +24,15 @@ a motion sensor that detects the change (_delta_) in movement relative to the
 current device orientation, in three dimensions along the _x_, _y_, and _z_
 axis.
 
+Access is via a global `navigator.accelerometer` object.
+
+Although the object is attached to the global scoped `navigator`, it is not available until after the `deviceready` event.
+
+    document.addEventListener("deviceready", onDeviceReady, false);
+    function onDeviceReady() {
+        console.log(navigator.accelerometer);
+    }
+
 ## Installation
 
     cordova plugin add org.apache.cordova.device-motion
@@ -33,11 +42,12 @@ axis.
 - Amazon Fire OS
 - Android
 - BlackBerry 10
+- Browser
 - Firefox OS
 - iOS
 - Tizen
-- Windows Phone 7 and 8
-- Windows 8
+- Windows Phone 8
+- Windows
 
 ## Methods
 
@@ -74,6 +84,10 @@ callback function.
 
     navigator.accelerometer.getCurrentAcceleration(onSuccess, onError);
 
+### Browser Quirks
+
+Values for X, Y, Z motion are all randomly generated in order to simulate the accelerometer.
+
 ### iOS Quirks
 
 - iOS doesn't recognize the concept of getting the current acceleration at any given point.
@@ -94,10 +108,10 @@ accelerometer.
 
     var watchID = navigator.accelerometer.watchAcceleration(accelerometerSuccess,
                                                            accelerometerError,
-                                                           [accelerometerOptions]);
+                                                           accelerometerOptions);
 
 - __accelerometerOptions__: An object with the following optional keys:
-  - __frequency__: How often to retrieve the `Acceleration` in milliseconds. _(Number)_ (Default: 10000)
+  - __period__: requested period of calls to accelerometerSuccess with acceleration data in Milliseconds. _(Number)_ (Default: 10000)
 
 
 ###  Example

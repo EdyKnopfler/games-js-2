@@ -25,7 +25,7 @@
       var imagens, animacao, colisor, nave, criadorInimigos;
       var totalImagens = 0, carregadas = 0;
       var musicaAcao, somTiro, somExplosao;
-      var acelerometro;
+      var acelerometro, primeiraLeitura;
 
       window.onload = function() {
          document.addEventListener('deviceready', iniciar);
@@ -179,8 +179,17 @@
       }
 
       function iniciarJogo() {
+         primeiraLeitura = true;
+      
          acelerometro = navigator.accelerometer.watchAcceleration(
             function(aceleracao) {
+               // Na primeira leitura, calibramos a nave
+               if (primeiraLeitura) {
+                  nave.repouso.x = aceleracao.x;
+                  nave.repouso.y = aceleracao.y;
+                  primeiraLeitura = false;
+               }               
+            
                nave.aceleracao.x = aceleracao.x;
                nave.aceleracao.y = aceleracao.y;
             },

@@ -11,6 +11,7 @@ function Nave(context, imagem, imgExplosao) {
    this.acabaramVidas = null;
    this.vidasExtras = 3;
    this.aceleracao = { x: 0, y: 0 };
+   this.repouso = { x: 0, y: 0 };
 }
 Nave.prototype = {
    atualizar: function() {
@@ -18,24 +19,25 @@ Nave.prototype = {
           this.velocidade * animacao.decorrido / 1000;
       var acc = this.aceleracao;
       
-      if (acc.x > 0 && this.x > 0)
+      // Verificar de acordo com a posição de repouso
+      if (acc.x > this.repouso.x && this.x > 0)
          this.x -= incremento;
       
-      if (acc.x < 0 && this.x < this.context.canvas.width - 36)
+      if (acc.x < this.repouso.x && this.x < this.context.canvas.width - 36)
          this.x += incremento;
          
-      if (acc.y < 0 && this.y > 0)
+      if (acc.y < this.repouso.y && this.y > 0)
          this.y -= incremento;
       
-      if (acc.y > 0 && this.y < this.context.canvas.height - 48)
+      if (acc.y > this.repouso.y && this.y < this.context.canvas.height - 48)
          this.y += incremento;
    },
    desenhar: function() {
       var acc = this.aceleracao;
 
-      if (acc.x > 0)
+      if (acc.x > this.repouso.x)
          this.spritesheet.linha = 1;
-      else if (acc.x < 0)
+      else if (acc.x < this.repouso.y)
          this.spritesheet.linha = 2;
       else
          this.spritesheet.linha = 0;  
