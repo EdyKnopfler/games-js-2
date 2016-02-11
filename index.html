@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+   <meta charset="utf-8">
+   <title>Jogo de Bilhar</title>
+   <meta name="viewport" content="width=device-width, 
+         height=device-height, user-scalable=no, 
+         initial-scale=1, maximum-scale=1, minimum-scale=1">
+   
+   <script src="js/Box2dWeb-2.1.a.3.min.js"></script>
+   <script src="js/hammer.min.js"></script>
+   <script src="js/construtores.js"></script>
+   <script src="js/animacao.js"></script>
+   <script src="js/spritesheet.js"></script>
+   <script src="js/parede.js"></script>
+   <script src="js/cacapa.js"></script>
+   <script src="js/bola.js"></script>
+   <script src="js/tacada.js"></script>
+   <script src="js/taco.js"></script>
+   <script src="js/barra-forca.js"></script>
+   <script src="js/colisao-listener.js"></script>
+   <script src="js/tacada-automatica.js"></script>
+   <script src="js/snapshot.js"></script>
+   <script src="js/simulacao-listener.js"></script>
+   <script src="js/analise-jogada.js"></script>
+   <script src="js/mostrador.js"></script>
+   
+   <script>
+      var canvas, context, mundo, animacao;
+      var ESCALA = 30;
+      var bolaBranca, bolasColoridas;
+      var hammer, taco, barraForca;
+      var somTacada, somMadeira, somCacapa;
+      var colisaoListener, simulacaoListener;
+      var bolaOrdem, jogadorDaVez, primeiraAtingida, encacapadas,
+          mostrador;
+      var JOG_HUMANO = 1, JOG_COMPUTADOR = 2;
+   
+      window.onload = function() {
+         alert('Coloque seu celular na horizontal...');
+
+         canvas = document.getElementById('bilhar');
+         context = canvas.getContext('2d');
+         
+         somTacada = new Audio();
+         somTacada.src = 'snd/colisao.mp3';
+         somTacada.load();
+
+         somMadeira = new Audio();
+         somMadeira.src = 'snd/knock.mp3';
+         somMadeira.load();
+
+         somCacapa = new Audio();
+         somCacapa.src = 'snd/hit.mp3';
+         somCacapa.load();
+
+         mundo = new b2World(new b2Vec2(0, 0), true);
+         mundo.escala = ESCALA;
+         
+         animacao = new Animacao(context, mundo);
+         hammer = new Hammer(canvas);
+         
+         debugDraw();
+         iniciar();
+      }
+      
+      function iniciar() {
+         criarParedes([
+            {x: 1, y: 44, largura: 20, altura: 312},
+            {x: 679, y: 44, largura: 20, altura: 312},
+            {x: 44, y: 1, largura: 288, altura: 20},
+            {x: 44, y: 379, largura: 288, altura: 20},
+            {x: 372, y: 1, largura: 288, altura: 20},
+            {x: 372, y: 379, largura: 288, altura: 20}
+         ]);
+         
+         criarCacapas([
+            {imgX: 0, imgY: 0, sensorX: 30, sensorY: 30},
+            {imgX: 328, imgY: 0, sensorX: 350, sensorY: 25},
+            {imgX: 656, imgY: 0, sensorX: 670, sensorY: 30},
+            {imgX: 0, imgY: 356, sensorX: 30, sensorY: 370},
+            {imgX: 328, imgY: 356, sensorX: 350, sensorY: 375},
+            {imgX: 656, imgY: 356, sensorX: 670, sensorY: 370}
+         ]);
+         
+         bolaBranca = criarBolaBranca(150, 200);
+         bolasColoridas = criarBolasColoridas([
+            {x: 519, y: 200, numero: 1},
+            {x: 600, y: 200, numero: 2},
+            {x: 580, y: 190, numero: 3},
+            {x: 580, y: 210, numero: 4},
+            {x: 540, y: 190, numero: 5},
+            {x: 540, y: 210, numero: 6},
+            {x: 560, y: 180, numero: 7},
+            {x: 560, y: 220, numero: 8},
+            {x: 560, y: 200, numero: 9}
+         ]);
+         
+         taco = new Taco(context, hammer);
+         taco.raio = 120;
+         taco.x = 125;
+         taco.y = canvas.height / 2 - 50;
+         posicionarTaco();
+         
+         var imgTacada = document.getElementById('tacada');
+         imgTacada.addEventListener('touchstart', function() {
+            taco.darTacada(50);
+         });
+         
+         taco.aposTacada = tacada;
+         animacao.novoSprite(taco);
+         
+         barraForca = new BarraForca(context, taco, hammer);
+         barraForca.x = taco.x - 100;
+         barraForca.y = taco.y + taco.raio + 25;
+         barraForca.largura = 200;
+         barraForca.altura = 50;
+         animacao.novoSprite(barraForca);
+         
+         simulacaoListener = new SimulacaoListener();
+         colisaoListener = new ColisaoListener(somTacada, somMadeira,
+                                               somCacapa);
+         colisaoListener.colisaoBolas = colisaoEntreBolas;
+         mundo.SetContactListener(colisaoListener);
+         
+         jogadorDaVez = JOG_HUMANO;
+         bolaOrdem = bolasColoridas[0];
+         
+         mostrador = new Mostrador(context);
+         mostrador.bolaOrdem = bolaOrdem;
+         animacao.novoSprite(mostrador);
+                  
+         animacao.ligar();
+      }
+      
+      function debugDraw() {
+         var debugDraw = new b2DebugDraw();
+         debugDraw.SetSprite(context);
+         debugDraw.SetDrawScale(ESCALA);
+         debugDraw.SetFillAlpha(0.6);
+         debugDraw.SetLineThickness(1.0);
+         debugDraw.SetFlags(b2DebugDraw.e_shapeBit);
+         mundo.SetDebugDraw(debugDraw);
+      }
+      
+      function criarParedes(arrayDados) {
+         var arr = arrayDados;
+         
+         for (var i in arr) {
+            var p = new Parede(context, arr[i].x, arr[i].y, 
+                    arr[i].largura, arr[i].altura, mundo);
+            animacao.novoSprite(p);
+         }      
+      }
+      
+      function criarCacapas(arrayDados) {
+         var arr = arrayDados;
+         
+         for (var i in arr) {
+            var c = new Cacapa(context, arr[i].imgX, arr[i].imgY,
+                               arr[i].sensorX, arr[i].sensorY, mundo);
+            c.spritesheet.coluna = i;
+            animacao.novoSprite(c);
+         }
+      }
+      
+      function criarBolaBranca(x, y) {
+         var b = new Bola(context, x, y, 12, mundo);  // raio = 12
+         b.id = BOLA_BRANCA;
+         animacao.novoSprite(b);
+         b.encacapou = encacapouBranca;
+         return b;
+      }
+
+      function criarBolasColoridas(arrayDados) {
+         var arr = arrayDados;
+         var bolas = new Array(arr.length);
+
+         for (var i in arr) {
+            // raio = 10
+            var b = new Bola(context, arr[i].x, arr[i].y, 10, mundo);
+            b.id = arr[i].numero;
+            animacao.novoSprite(b);
+            bolas[i] = b;
+            b.encacapou = encacapouColorida;
+         }
+         
+         return bolas;
+      }
+      
+      function tacada() {
+         if (taco.forca == 0) return;
+      
+         // Esconder os controles
+         taco.podeDesenhar = false;
+         barraForca.podeDesenhar = false;
+
+         // Realizar a tacada
+         encacapadas = [];
+         primeiraAtingida = null;
+         var tacada = new Tacada(bolaBranca, bolasColoridas);
+         animacao.novoProcessamento(tacada);
+         tacada.aposTacada = bolasPararam;
+         tacada.disparar(taco.rotacao, taco.forca);
+         
+         somTacada.play();
+      }
+      
+      function bolasPararam() {
+         if (bolaBranca.foraDeJogo) {
+            bolaBranca.corpo.SetPosition(new b2Vec2(150/ESCALA, 200/ESCALA));
+            bolaBranca.foraDeJogo = false;
+         }
+         
+         var bola9 = bolasColoridas[8];  // começa em zero
+         if (bola9.foraDeJogo) {
+            bola9.corpo.SetPosition(
+               new b2Vec2(560/ESCALA, 200/ESCALA));
+            bola9.foraDeJogo = false;
+         }
+         
+         taco.podeDesenhar = true;
+         barraForca.podeDesenhar = true;
+         
+         posicionarTaco();
+         barraForca.forca = 0;
+         taco.forca = 0;
+         
+         analisarJogada();
+      }
+      
+      function posicionarTaco() {
+         var pos = bolaBranca.corpo.GetPosition();
+         var x = pos.x * ESCALA;
+         var y = pos.y * ESCALA;
+         
+         taco.brancaX = x;
+         taco.brancaY = y;
+         taco.raioDistancia = bolaBranca.raio;
+      }
+      
+      function encacapouBranca(bola) {
+         encacapadas.push(bola);
+         
+         animacao.novoProcessamento({
+            processar: function() {
+               bola.foraDeJogo = true;
+               bola.corpo.SetLinearVelocity(new b2Vec2(0, 0));
+               bola.corpo.SetPosition(new b2Vec2(-1000, -1000));
+               animacao.excluirProcessamento(this);
+            }
+         });      
+      }      
+      
+      function encacapouColorida(bola) {
+         encacapadas.push(bola);
+
+         animacao.novoProcessamento({
+            processar: function() {
+               if (bola.id == 9) {
+                  bola.foraDeJogo = true;
+                  bola.corpo.SetLinearVelocity(new b2Vec2(0, 0));
+                  bola.corpo.SetPosition(new b2Vec2(-100/ESCALA, -100/ESCALA));
+               }
+               else {
+                  bola.tirarDoJogo();
+               }
+
+               animacao.excluirProcessamento(this);
+            }
+         });
+      }
+      
+      function tacadaComputador() {
+         mundo.SetContactListener(simulacaoListener);
+         var automatica = new TacadaAutomatica(mundo, bolaBranca,
+                              bolasColoridas, simulacaoListener);
+         var melhorTacada = automatica.realizarTestes(bolaOrdem);
+         taco.rotacao = melhorTacada.rotacao;
+         taco.forca = melhorTacada.forca;
+         mundo.SetContactListener(colisaoListener);
+         tacada();
+      }      
+      
+      function colisaoEntreBolas(bola1, bola2) {
+         if (primeiraAtingida) return;
+         
+         if (bola1.id == BOLA_BRANCA)
+            primeiraAtingida = bola2;
+         else if (bola2.id == BOLA_BRANCA)
+            primeiraAtingida = bola1;
+      }      
+      
+      function analisarJogada() {
+         var analise = new AnaliseJogada();
+         analise.analisar(primeiraAtingida, bolaOrdem, encacapadas);
+         
+         // Se ganhou, notifica e reinicia
+         if (analise.ganhouJogo) {
+            alert(jogadorDaVez == JOG_HUMANO  ?  'Você venceu!'  :
+                  'Você perdeu...');
+            location.reload();
+            return;
+         }
+         
+         // Se não encaçapou legalmente, passa a vez
+         else if (!analise.encacapou) {
+            jogadorDaVez = (jogadorDaVez == JOG_HUMANO  ?  
+                            JOG_COMPUTADOR  :  JOG_HUMANO );
+         }
+         
+         // Mudar a bola de ordem
+         for (var i in bolasColoridas) {
+            var b = bolasColoridas[i];
+            
+            if (!b.foraDeJogo) {
+               bolaOrdem = b;
+               mostrador.bolaOrdem = b;
+               break;
+            }
+         }
+         
+         if (jogadorDaVez == JOG_COMPUTADOR)
+            tacadaComputador();
+      }      
+      
+      
+      
+      
+      
+      
+   </script>
+   
+   <style>
+      body {
+         margin: 0;
+         width: 100%;
+         height: 100%;
+         background: #333;
+      }
+      
+      canvas {
+         height: 100%;
+         width: auto;
+         display: block;
+         margin: 0 auto;
+      }
+      
+      #tacada {
+         position: absolute;
+         right: 20px;
+         top: 20px;
+      }
+   </style>
+</head>
+
+<body>
+   <canvas id="bilhar" width="700" height="400"></canvas>
+   <img src="img/tacada.png" id="tacada">
+</body>
+
+</html>
