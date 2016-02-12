@@ -15,11 +15,11 @@ function Taco(context, hammer) {
    this.raioDistancia = 0;
    
    // Configuração dos gestos para serem reconhecidos juntos
-   //var pinch = hammer.get('pinch');
+   var pinch = hammer.get('pinch');
    var rotate = hammer.get('rotate');
-   //hammer.get('pinch').set({ enable: true, threshold: 0 });
+   hammer.get('pinch').set({ enable: true, threshold: 0 });
    hammer.get('rotate').set({ enable: true, threshold: 0 });
-   //pinch.recognizeWith(rotate);
+   pinch.recognizeWith(rotate);
    
    // Eventos
    var taco = this;
