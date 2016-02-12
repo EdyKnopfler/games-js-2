@@ -105,10 +105,8 @@
          posicionarTaco();
          
          var imgTacada = document.getElementById('tacada');
-         imgTacada.addEventListener('touchstart', function() {
-            taco.darTacada(50);
-         });
-         imgTacada.addEventListener('click', function() {
+         var hPow = new Hammer(imgTacada);
+         hPow.on('tap', function() {
             taco.darTacada(50);
          });
          
