@@ -19,7 +19,7 @@ function Taco(context, hammer) {
    var rotate = hammer.get('rotate');
    hammer.get('pinch').set({ enable: true, threshold: 0 });
    hammer.get('rotate').set({ enable: true, threshold: 0 });
-   pinch.recognizeWith(rotate);
+   //pinch.recognizeWith(rotate);
    
    // Eventos
    var taco = this;
